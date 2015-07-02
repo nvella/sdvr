@@ -101,7 +101,7 @@ struct pk_s *pk_s_read(int sock_fd) {
   // Reallocate packet for payload data
   p->buffer = realloc(p->buffer, 20 + *(p->d_payload_size));
   // Read in new data
-  read(sock_fd, p->buffer, *(p->d_payload_size));
+  read(sock_fd, p->buffer + 20, *(p->d_payload_size));
 
   return p;
 }
