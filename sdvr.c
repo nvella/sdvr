@@ -8,6 +8,9 @@
 #include <netdb.h>
 #include <time.h>
 
+#define NAME "sdvr"
+#define VERSION "0.0.1"
+
 struct pk_s {
   int size;
   char *buffer;
@@ -106,6 +109,8 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  fprintf(stderr, "%s version %s\n", NAME, VERSION);
+
   struct hostent *dvr_host = gethostbyname(argv[1]);
   if(dvr_host == NULL) error("no such host");
   int dvr_port = atoi(argv[2]);
@@ -123,7 +128,7 @@ int main(int argc, char** argv) {
   if(sock_fd < 0) error("failed to open socket");
   // Connect the socket
   if(connect(sock_fd, &dvr, sizeof(struct sockaddr_in)) < 0) error("failed to connect");
-  fprintf(stderr, "connected\n");
+  fprintf(stderr, "Socket connected.\n");
 
   // Socket connected at this point, now;
   // 1. Send auth packet
@@ -149,6 +154,8 @@ int main(int argc, char** argv) {
   // Read response packet
   struct pk_s *res_packet = pk_s_read(sock_fd);
   if(*(res_packet->d_packet_id) != 0x01) error("did not receive OK packet back");
+
+  fprintf(stderr, "Authenticated.\n");
 
   // close the socket
   close(sock_fd);
