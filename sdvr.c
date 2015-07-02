@@ -22,6 +22,7 @@ struct pk_s {
   int *d_packet_id;
   int *d_payload_size;
   int *d_time;
+  int *d_status;
 };
 
 struct pk_c_01_s {
@@ -51,7 +52,7 @@ void pk_s_init(struct pk_s *p) {
   p->d_packet_id    = (int*)(p->buffer + 4);
   p->d_payload_size = (int*)(p->buffer + 8);
   p->d_time         = (int*)(p->buffer + 12);
-
+  p->d_status       = (int*)(p->buffer + 16);
   // Payload size and packet id still need to be set
 }
 
@@ -157,7 +158,9 @@ int main(int argc, char** argv) {
   // Read response packet
   struct pk_s *res_packet = pk_s_read(sock_fd);
   if(*(res_packet->d_packet_id) != 0x01) error("did not receive OK packet back");
+  if(*(res_packet->d_status) != 200)     error("Authentication failed. (wrong username or password?)");
 
+  // Authentication was successful
   fprintf(stderr, "Authenticated.\n");
 
   // close the socket
