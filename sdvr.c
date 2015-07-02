@@ -92,6 +92,9 @@ struct pk_s *pk_s_read(int sock_fd) {
   // Init pointers in packet
   pk_s_init(p);
 
+  // Correctly set buffer size
+  p->size = 20 + *(p->d_payload_size);
+
   // Check magic number
   if(*(p->d_magic) != 0xABCDEF0) error("magic number in packet not correct");
 
