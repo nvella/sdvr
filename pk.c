@@ -94,3 +94,23 @@ struct pk_s *pk_s_read(int sock_fd) {
 
   return p;
 }
+
+void pk_c_03_s_new(struct pk_c_03_s *p) {
+  bzero(p, sizeof(struct pk_c_03_s));
+
+  p->size = 32; // Packet is 32 bytes in total;
+  p->buffer = malloc(p->size);
+  bzero(p->buffer, p->size); // Clear buffer
+
+  // Setup offsets
+  p->d_magic        = (int*)(p->buffer);
+  p->d_packet_id    = (int*)(p->buffer + 4);
+  p->d_payload_size = (int*)(p->buffer + 8);
+  p->d_control      = (int*)(p->buffer + 28);
+
+  // Set static values
+  *(p->d_magic) = 0xABCDEF0; // Sent as little endian over network: F0 DE BC 0A
+  *(p->d_packet_id) = 0x03; // Packet ID: 01 00 00 00
+  *(p->d_payload_size) = p->size - 20; // or 12
+  *(p->d_control) = 0x01; // no one knows why but it works
+}

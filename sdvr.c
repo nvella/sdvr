@@ -109,6 +109,29 @@ int main(int argc, char** argv) {
     pk_s_destroy(pk);
   }
 
+  fprintf(stderr, "Sending video stream control packet\n");
+  // Send a 0x03 packet to start the video stream
+  // Create 0x03 packet
+  struct pk_c_03_s *pk_03 = malloc(sizeof(struct pk_c_03_s));
+  pk_c_03_s_new(pk_03); // Init packet
+  // Send packet
+  if(write(sock_fd, pk_03->buffer, pk_03->size) < 0)
+    error("couldn't send video stream start packet");
+  // Destroy packet
+  pk_s_destroy(pk_03);
+
+  // Main packet receiving loop
+  while(1) {
+    struct pk_s *pk = pk_s_read(sock_fd);
+    // Print the packet ID
+    fprintf(stderr, "Received packet: 0x%02x\n", *(pk->d_packet_id));
+    if(*(pk->d_packet_id) == 0x03) {
+      fprintf(stderr, "  Video packet\n");
+    }
+    // Free the packet, avoid memory leaks
+    pk_s_destroy(pk);
+  }
+
   // close the socket
   close(sock_fd);
   return 0;
