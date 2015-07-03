@@ -11,6 +11,9 @@
 #define NAME "sdvr"
 #define VERSION "0.0.1"
 
+char dvr_name[32];
+char dvr_vdef[32];
+
 struct pk_s {
   int size;
   char *buffer;
@@ -55,7 +58,7 @@ struct pk_s_01_s {
 
   char *d_name; // DVR Name
   char *d_vdef; // DVR Video definition (960H)
-}
+};
 
 void error(char *msg) {
     perror(msg);
@@ -186,6 +189,18 @@ int main(int argc, char** argv) {
   struct pk_s *res_packet = pk_s_read(sock_fd);
   if(*(res_packet->d_packet_id) != 0x01) error("did not receive OK packet back");
   if(*(res_packet->d_status) != 200)     error("Authentication failed. (wrong username or password?)");
+
+  // Create Packet 0x1 S->C structure and copy data in
+  struct pk_s_01_s pk_01_res;
+  memcpy(&pk_01_res, res_packet, sizeof(struct pk_s));
+  free(res_packet); // Only freeing the packet struct to keep the buffer
+  pk_s_01_s_init(&pk_01_res); // Init the pointers
+  strcpy(dvr_name, pk_01_res.d_name); // Copy the DVR name to the global
+  strcpy(dvr_vdef, pk_01_res.d_vdef); // Copy the DVR vdef to the global
+  free(pk_01_res.buffer); // Free the packet buffer (cant free the struct as it's defined on the stack)
+
+  // Print some status data
+  fprintf(stderr, "DVR Name: %s\nVideo definition: %s\n", dvr_name, dvr_vdef);
 
   // Authentication was successful
   fprintf(stderr, "Authenticated.\n");
