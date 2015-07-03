@@ -41,6 +41,22 @@ struct pk_c_01_s {
   char *d_password; // data password
 };
 
+struct pk_s_01_s {
+  int size;
+  char *buffer;
+
+  // in-buffer data
+
+  int *d_magic;
+
+  int *d_packet_id;
+  int *d_payload_size;
+  int *d_time;
+
+  char *d_name; // DVR Name
+  char *d_vdef; // DVR Video definition (960H)
+}
+
 void error(char *msg) {
     perror(msg);
     exit(0);
@@ -80,6 +96,17 @@ void pk_c_01_s_new(struct pk_c_01_s *p) {
   *(p->d_magic) = 0xABCDEF0; // Sent as little endian over network: F0 DE BC 0A
   *(p->d_packet_id) = 0x01; // Packet ID: 01 00 00 00
   *(p->d_payload_size) = p->size - 20; // or 1792
+}
+
+void pk_s_01_s_init(struct pk_s_01_s *p) {
+  // Setup offsets
+  p->d_magic        = (int*)(p->buffer);
+  p->d_packet_id    = (int*)(p->buffer + 4);
+  p->d_payload_size = (int*)(p->buffer + 8);
+  p->d_time         = (int*)(p->buffer + 12);
+
+  p->d_name         = p->buffer + 80;
+  p->d_vdef         = p->buffer + 160;
 }
 
 // Read a packet
