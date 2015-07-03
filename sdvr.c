@@ -65,6 +65,18 @@ void error(char *msg) {
     exit(0);
 }
 
+// This function only exists because read() sometimes returns less data than it
+// should, even though there is more data in the socket.
+size_t stable_read(int fd, void *buffer, size_t count) {
+  size_t read_so_far = 0;
+  while(read_so_far < count) {
+    int read_this_go = read(fd, buffer + read_so_far, count - read_so_far);
+    if(read_this_go < 0) return read_this_go;
+    read_so_far += read_this_go;
+  }
+  return read_so_far;
+}
+
 void pk_s_init(struct pk_s *p) {
   // Setup offsets
   p->d_magic        = (int*)(p->buffer);
@@ -119,7 +131,12 @@ struct pk_s *pk_s_read(int sock_fd) {
   bzero(p, sizeof(struct pk_s));
 
   p->buffer = malloc(20); // Allocate enough space for header
-  read(sock_fd, p->buffer, 20); // Read in bytes
+
+  // Error if memory not available
+  if(p->buffer == NULL || p == NULL) error("Out of memory");
+
+  // read in bytes
+  if(stable_read(sock_fd, p->buffer, 20) != 20) error("Failed to read packet header");
 
   // Init pointers in packet
   pk_s_init(p);
@@ -128,12 +145,18 @@ struct pk_s *pk_s_read(int sock_fd) {
   p->size = 20 + *(p->d_payload_size);
 
   // Check magic number
-  if(*(p->d_magic) != 0xABCDEF0) error("magic number in packet not correct");
+  if(*(p->d_magic) != 0xABCDEF0) {
+    fprintf(stderr, "magic number: %08x\n", *(p->d_magic));
+    error("magic number in packet not correct");
+  }
 
   // Reallocate packet for payload data
   p->buffer = realloc(p->buffer, 20 + *(p->d_payload_size));
   // Read in new data
-  read(sock_fd, p->buffer + 20, *(p->d_payload_size));
+  if(stable_read(sock_fd, p->buffer + 20, *(p->d_payload_size)) != *(p->d_payload_size)) {
+    fprintf(stderr, "payload expected: %i\n", *(p->d_payload_size));
+    error("Failed to read packet payload");
+  }
 
   return p;
 }
@@ -204,6 +227,15 @@ int main(int argc, char** argv) {
 
   // Authentication was successful
   fprintf(stderr, "Authenticated.\n");
+
+  // Enter a loop, continuously receive packets
+  while(1) {
+    struct pk_s *pk = pk_s_read(sock_fd);
+    // Print the packet ID
+    fprintf(stderr, "Received packet: 0x%02x\n", *(pk->d_packet_id));
+    // Free the packet, avoid memory leaks
+    pk_s_destroy(pk);
+  }
 
   // close the socket
   close(sock_fd);
