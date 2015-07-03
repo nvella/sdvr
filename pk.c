@@ -114,3 +114,21 @@ void pk_c_03_s_new(struct pk_c_03_s *p) {
   *(p->d_payload_size) = p->size - 20; // or 12
   *(p->d_control) = 0x01; // no one knows why but it works
 }
+
+void pk_s_03_s_init(struct pk_s_03_s *p) {
+  // Setup offsets
+  p->d_magic        = (int*)(p->buffer);
+  p->d_packet_id    = (int*)(p->buffer + 4);
+  p->d_payload_size = (int*)(p->buffer + 8);
+  p->d_time         = (int*)(p->buffer + 12);
+
+  p->d_type_str           = p->buffer + 20;
+  p->d_video_type         = p->buffer + 24;
+  p->d_video_payload_size = (int*)(p->buffer + 28);
+
+  p->d_max_channels       = (int*)(p->buffer + 32);
+  p->d_channel_id         = (int*)(p->buffer + 40);
+  p->d_current_time       = (int*)(p->buffer + 44);
+
+  p->d_video_payload      = p->buffer + 52;
+}

@@ -120,6 +120,8 @@ int main(int argc, char** argv) {
   // Destroy packet
   pk_s_destroy(pk_03);
 
+  int i = 0;
+
   // Main packet receiving loop
   while(1) {
     struct pk_s *pk = pk_s_read(sock_fd);
@@ -127,9 +129,28 @@ int main(int argc, char** argv) {
     fprintf(stderr, "Received packet: 0x%02x\n", *(pk->d_packet_id));
     if(*(pk->d_packet_id) == 0x03) {
       fprintf(stderr, "  Video packet\n");
+
+      // Create Packet 0x3 S->C structure and copy data in
+      struct pk_s_03_s *pk_03_res = malloc(sizeof(struct pk_s_03_s));
+      memcpy(pk_03_res, pk, sizeof(struct pk_s));
+      free(pk); // Only freeing the packet struct to keep the buffer
+      pk_s_03_s_init(pk_03_res); // Init the pointers
+
+      fprintf(stderr, "  Max channels: %i\n  Current channel: %i\n",
+        *(pk_03_res->d_max_channels),
+        *(pk_03_res->d_channel_id));
+
+      FILE *fp = fopen("video.h264", "a");
+      fwrite(pk_03_res->d_video_payload, *(pk_03_res->d_video_payload_size), 1, fp);
+      fclose(fp);
+
+      pk_s_destroy(pk_03_res); // Destroy the packet
+
+      i++;
+    } else {
+      // Free the packet, avoid memory leaks
+      pk_s_destroy(pk);
     }
-    // Free the packet, avoid memory leaks
-    pk_s_destroy(pk);
   }
 
   // close the socket

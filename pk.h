@@ -65,6 +65,30 @@ struct pk_c_03_s {
   int *d_control; // Control variable, use currently unknown
 };
 
+/*** Packet 03, Server to Client, Video ***/
+struct pk_s_03_s {
+  int size;
+  char *buffer;
+
+  // in-buffer data
+
+  int *d_magic;
+
+  int *d_packet_id;
+  int *d_payload_size;
+  int *d_time;
+
+  char *d_type_str; // type string, 4 characters
+  char *d_video_type; // video type string, usually 4 characters/'H264'
+  int *d_video_payload_size; // video payload size
+
+  int *d_max_channels;
+  int *d_channel_id;
+  int *d_current_time;
+
+  char *d_video_payload;
+};
+
 /*** Method declarations ***/
 
 void pk_s_init(struct pk_s *);
@@ -76,3 +100,5 @@ void pk_c_01_s_new(struct pk_c_01_s *);
 void pk_s_01_s_init(struct pk_s_01_s *);
 
 void pk_c_03_s_new(struct pk_c_03_s *);
+
+void pk_s_03_s_init(struct pk_s_03_s *);
