@@ -84,13 +84,13 @@ int main(int argc, char** argv) {
   if(*(res_packet->d_status) != 200)     error("Authentication failed. (wrong username or password?)");
 
   // Create Packet 0x1 S->C structure and copy data in
-  struct pk_s_01_s pk_01_res;
-  memcpy(&pk_01_res, res_packet, sizeof(struct pk_s));
+  struct pk_s_01_s *pk_01_res = malloc(sizeof(struct pk_s_01_s));
+  memcpy(pk_01_res, res_packet, sizeof(struct pk_s));
   free(res_packet); // Only freeing the packet struct to keep the buffer
-  pk_s_01_s_init(&pk_01_res); // Init the pointers
-  strcpy(dvr_name, pk_01_res.d_name); // Copy the DVR name to the global
-  strcpy(dvr_vdef, pk_01_res.d_vdef); // Copy the DVR vdef to the global
-  free(pk_01_res.buffer); // Free the packet buffer (cant free the struct as it's defined on the stack)
+  pk_s_01_s_init(pk_01_res); // Init the pointers
+  strcpy(dvr_name, pk_01_res->d_name); // Copy the DVR name to the global
+  strcpy(dvr_vdef, pk_01_res->d_vdef); // Copy the DVR vdef to the global
+  pk_s_destroy(pk_01_res); // Destroy the packet
 
   // Print some status data
   fprintf(stderr, "DVR Name: %s\nVideo definition: %s\n", dvr_name, dvr_vdef);
