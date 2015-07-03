@@ -75,6 +75,7 @@ void pk_s_init(struct pk_s *p) {
 void pk_s_destroy(void *pk_v) {
   struct pk_s *p = (struct pk_s *)pk_v;
   free(p->buffer);
+  free(p);
 }
 
 void pk_c_01_s_new(struct pk_c_01_s *p) {
@@ -180,7 +181,6 @@ int main(int argc, char** argv) {
 
   // Destroy auth packet
   pk_s_destroy(auth_packet);
-  free(auth_packet);
 
   // Read response packet
   struct pk_s *res_packet = pk_s_read(sock_fd);
