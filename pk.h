@@ -62,7 +62,7 @@ struct pk_c_03_s {
   int *d_payload_size;
   int *d_time;
 
-  char *d_control; // Control variable, use currently unknown
+  int *d_control; // Control variable, use currently unknown
 };
 
 /*** Method declarations ***/
