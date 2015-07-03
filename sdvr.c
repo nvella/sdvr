@@ -98,11 +98,13 @@ int main(int argc, char** argv) {
   // Authentication was successful
   fprintf(stderr, "Authenticated.\n");
 
-  // Enter a loop, continuously receive packets
-  while(1) {
+  // Enter a loop, receive packets until a 0x99 packet is received
+  int packet_id = -1;
+  while(packet_id != 0x99) {
     struct pk_s *pk = pk_s_read(sock_fd);
     // Print the packet ID
     fprintf(stderr, "Received packet: 0x%02x\n", *(pk->d_packet_id));
+    packet_id = *(pk->d_packet_id);
     // Free the packet, avoid memory leaks
     pk_s_destroy(pk);
   }
